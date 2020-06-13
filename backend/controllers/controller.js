@@ -1,4 +1,4 @@
-const Note = require('./models/note.js');
+const Note = require('C:/Users/user/AndroidStudioProjects/flutter_node_js/backend/models/note.js');
 
 // Create and Save a new Note
 exports.create = (req, res) => {
@@ -12,19 +12,23 @@ exports.create = (req, res) => {
     // Create a Note
     const note = new Note({
         title: req.body.title || "Untitled Note",
-        content: req.body.content
+        content: req.body.content,
+        userID: req.body.userID,
+        important: req.body.important,
+        date: req.body.date
     });
 
     // Save Note in the database
     note.save()
         .then(data => {
-            res.send(data);
+            res.status(200).send(data);
         }).catch(err => {
             res.status(500).send({
                 message: err.message || "Some error occurred while creating the Note."
             });
         });
 };
+
 
 // Retrieve and return all notes from the database.
 exports.findAll = (req, res) => {
@@ -37,6 +41,20 @@ exports.findAll = (req, res) => {
             });
         });
 };
+
+
+exports.findImportant = (req, res) => {
+    var query = {important: true};
+    Note.find(query)
+        .then(notes => {
+            res.send(notes);
+        }).catch(err => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving notes."
+            });
+        });
+};
+
 // Find a single note with a noteId
 exports.findOne = (req, res) => {
     Note.findById(req.params.noteId)
@@ -55,6 +73,27 @@ exports.findOne = (req, res) => {
             }
             return res.status(500).send({
                 message: "Error retrieving note with id " + req.params.noteId
+            });
+        });
+};
+
+exports.findOneByUser = (req, res) => {
+    Note.findById(req.params.userId)
+        .then(note => {
+            if (!note) {
+                return res.status(404).send({
+                    message: "Note not found with id " + req.params.userId
+                });
+            }
+            res.send(note);
+        }).catch(err => {
+            if (err.kind === 'ObjectId') {
+                return res.status(404).send({
+                    message: "Note not found with id " + req.params.userId
+                });
+            }
+            return res.status(500).send({
+                message: "Error retrieving note with id " + req.params.userId
             });
         });
 };
