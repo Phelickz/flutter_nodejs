@@ -31,6 +31,8 @@ dependencies:
   provider:
   http:
   shared_preferences:
+  intl: ^0.16.1
+  timeago:
 
 dev_dependencies:
   flutter_test:

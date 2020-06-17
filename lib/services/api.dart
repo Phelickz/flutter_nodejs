@@ -23,25 +23,29 @@ class ApiService {
   AuthStatus status;
 
   Future<User> getUser() async {
-    final preference = await SharedPreferences.getInstance();
-    String apiKey = preference.getString('userID');
-    Map<String, String> headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    };
-    print(apiKey);
-    Response response = await http.get(getUserUrl+'/${apiKey}', headers: headers);
-    print(response.statusCode);
-    if(response.statusCode != 200){
-      status = AuthStatus.NotAutheticated;
-      return null;
+    try {
+      final preference = await SharedPreferences.getInstance();
+      String apiKey = preference.getString('userID');
+      Map<String, String> headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
+      print(apiKey);
+      Response response =
+          await http.get(getUserUrl + '/${apiKey}', headers: headers);
+      print(response.statusCode);
+      if (response.statusCode != 200) {
+        status = AuthStatus.NotAutheticated;
+        return null;
+      }
 
+      status = AuthStatus.Authenticated;
+      final Map data = json.decode(response.body);
+      final User user = User.fromMap(data);
+      return user;
+    } catch (e) {
+      print(e);
     }
-
-    status = AuthStatus.Authenticated;
-    final Map data = json.decode(response.body);
-    final User user = User.fromMap(data);
-    return user;
   }
 
   Future<void> logout() async {
@@ -54,33 +58,32 @@ class ApiService {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
-    Map data = {
-      "email": user.email,
-      "password": user.password
-    };
+    Map data = {"email": user.email, "password": user.password};
     String payload = json.encode(data);
     Response response =
         await http.post(loginUrl, headers: headers, body: payload);
-    if(response.statusCode == 500) {
+    if (response.statusCode == 500) {
       status = AuthStatus.Error;
       SnackBarService.instance.showSnackBarError('Server Error. Try again');
       return null;
-    } else if(response.statusCode == 404){
+    } else if (response.statusCode == 404) {
       status = AuthStatus.UserNotFound;
       SnackBarService.instance.showSnackBarError('User does not exists');
       return null;
-    } else if(response.statusCode == 401){
+    } else if (response.statusCode == 401) {
       status = AuthStatus.NotAutheticated;
-      SnackBarService.instance.showSnackBarError('Password does not match user');
+      SnackBarService.instance
+          .showSnackBarError('Password does not match user');
       return null;
-    } else if(response.statusCode == 200){
+    } else if (response.statusCode == 200) {
       final Map user = json.decode(response.body);
       String apiKey = user['data']['_id'];
 
       final preferences = await SharedPreferences.getInstance();
       await preferences.setString('userID', apiKey);
       status = AuthStatus.Authenticated;
-      SnackBarService.instance.showSnackBarSuccess('Welcome back ${user['data']['name']}');
+      SnackBarService.instance
+          .showSnackBarSuccess('Welcome back ${user['data']['name']}');
       print(apiKey);
       return apiKey;
     }
@@ -134,32 +137,34 @@ class ApiService {
   }
 
   Future<List<Note>> getAllNotes(NoteState noteState) async {
-    Response response = await http.get(backendUrl);
-    if (response.statusCode != 200) {
-      print('Some error occured');
-      return null;
+    try {
+      Response response = await http.get(backendUrl);
+      if (response.statusCode != 200) {
+        print('Some error occured');
+        return null;
+      }
+
+      List<Note> _finalNotes = [];
+      List apiData = json.decode(response.body);
+
+      for (var i = 0; i < apiData.length; i++) {
+        _finalNotes.add(Note(
+            title: apiData[i]['title'],
+            content: apiData[i]['content'],
+            id: apiData[i]['_id'],
+            date: apiData[i]['date'],
+            important: apiData[i]['important'],
+            userId: apiData[i]['userID'],
+            createdAt: apiData[i]['createdAt']));
+      }
+
+      noteState.noteList = _finalNotes;
+      return _finalNotes;
+    } catch (e) {
+      print(e);
     }
-
-    List<Note> _finalNotes = [];
-    List apiData = json.decode(response.body);
-
-    for (var i = 0; i < apiData.length; i++) {
-      _finalNotes.add(Note(
-          title: apiData[i]['title'],
-          content: apiData[i]['content'],
-          id: apiData[i]['_id'],
-          date: apiData[i]['date'],
-          important: apiData[i]['important'],
-          userId: apiData[i]['userID'],
-          createdAt: apiData[i]['createdAt']));
-    }
-
-    noteState.noteList = _finalNotes;
-    return _finalNotes;
   }
 
-
-  
   Future<List<Note>> getImportantNotes(NoteState noteState) async {
     Response response = await http.get(getImportant);
     if (response.statusCode != 200) {
@@ -210,9 +215,10 @@ class ApiService {
     String payload = json.encode(data);
     Response response =
         await http.post(addNoteUrl, headers: headers, body: payload);
-    if(response.statusCode != 200){
+    if (response.statusCode != 200) {
       status = AuthStatus.Error;
-      SnackBarService.instance.showSnackBarError('An error occurred. Try again');
+      SnackBarService.instance
+          .showSnackBarError('An error occurred. Try again');
       return null;
     }
 

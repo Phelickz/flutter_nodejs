@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_node_js/pageviews/dashboard.dart';
 import 'package:flutter_node_js/pageviews/notepage.dart';
+import 'package:flutter_node_js/pageviews/profile.dart';
+import 'package:flutter_node_js/pageviews/reminders.dart';
 import 'package:flutter_node_js/screens/home.dart';
 import 'package:flutter_node_js/utils/colors.dart';
 import 'package:provider/provider.dart';
@@ -35,7 +37,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-          child: Scaffold(
+      child: Scaffold(
         backgroundColor: GlobalColors.blackColor,
         body: PageView(
           // physics: NeverScrollableScrollPhysics(),
@@ -44,17 +46,13 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             Container(child: DashBoard('sss')),
             Container(
-            child: Home(),),
+              child: Home(),
+            ),
+            Container(child: Reminders()),
+            Container(child: NotePage()),
             Container(
-                child: Center(
-              child: Text('something'),
-            )),
-            Container(
-                child: NotePage()),
-            Container(
-                child: Center(
-              child: Text('something'),
-            )),
+              child: Profile()
+            ),
           ],
         ),
         bottomNavigationBar: Container(

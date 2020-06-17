@@ -72,7 +72,6 @@ class _DashBoardState extends State<DashBoard> {
                 ),
               ),
 
-            
               SizedBox(
                 height: 20,
               ),
@@ -132,63 +131,23 @@ class _DashBoardState extends State<DashBoard> {
                               Spacer(),
                               Icon(
                                 Icons.more_vert,
-                                color: Colors.black45,
+                                color: Colors.white,
                               )
                             ],
                           ),
                         ),
-                        // StreamBuilder<List<ConversationSnippet>>(
-                        //   stream: _authState.userConversations(_uid),
-                        //   builder: (context, _snapshot) {
-                        //     var _data = _snapshot.data;
-                        //     return _snapshot.hasData
-                        //         ? ListView.builder(
-                        //             itemCount: _data.length,
-                        //             shrinkWrap: true,
-                        //             physics: ClampingScrollPhysics(),
-                        //             itemBuilder: (context, index) {
-                        //               return InkWell(
-                        //                 onTap: () {
-                        //                   Navigator.push(
-                        //                     context,
-                        //                     MaterialPageRoute(
-                        //                       builder: (context) =>
-                        //                           ChatScreen(
-                        //                         _uid,
-                        //                         _data[index].conversationID,
-                        //                         _data[index].id,
-                        //                         _data[index].image,
-                        //                         _data[index].name,
-                        //                       ),
-                        //                     ),
-                        //                   );
-                        //                 },
-                        //                 child: ChatTile(
-                        //                   imgUrl: _data[index].image,
-                        //                   name: _data[index].name,
-                        //                   lastMessage: _data[index].type ==
-                        //                           MessageType.Text
-                        //                       ? _data[index].lastMessage
-                        //                       : _data[index].type ==
-                        //                               MessageType.Image
-                        //                           ? 'Attachment: Photo'
-                        //                           : 'Attachment: Video',
-                        //                   haveunreadmessages: false,
-                        //                   unreadmessages: 1,
-                        //                   lastSeenTime: timeago.format(
-                        //                       _data[index]
-                        //                           .timestamp
-                        //                           .toDate()),
-                        //                   conversationID:
-                        //                       _data[index].conversationID,
-                        //                   id: _data[index].id,
-                        //                   uid: _uid,
-                        //                 ),
-                        //               );
-                        //             })
-                        //         : CircularProgressIndicator();
-                        //   },
-                        // ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        Container(
+                          child: Column(
+                            children: <Widget>[
+                              _reminders(),
+                              SizedBox(height: 5,),
+                              _reminders(),
+                            ],
+                          ),
+                        )
                       ],
                     ),
                   ))
@@ -199,165 +158,43 @@ class _DashBoardState extends State<DashBoard> {
     );
   }
 
-  // getUserId() async {
-  //   final uid = await Provider.of<AuthenticationState>(context, listen: false)
-  //       .currentUserId();
-  //   setState(() {
-  //     _uid = uid;
-  //   });
-  //   return uid;
-  // }
-}
-
-class StoryTile extends StatelessWidget {
-  final String imgUrl;
-  final String username;
-  StoryTile({@required this.imgUrl, @required this.username});
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(right: 16),
-      child: Column(
-        children: <Widget>[
-          ClipRRect(
-            borderRadius: BorderRadius.circular(60),
-            child: Image.network(
-              imgUrl,
-              height: 60,
-              width: 60,
-              fit: BoxFit.cover,
+  Widget _reminders() {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      color: Color(0xff171719),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 25),
+        child: Row(
+          children: <Widget>[
+            Text(
+              '9:30',
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
             ),
-          ),
-          SizedBox(
-            height: 16,
-          ),
-          Text(
-            username,
-            style: TextStyle(
-                color: Colors.white70,
-                fontSize: 16,
-                fontWeight: FontWeight.w600),
-          )
-        ],
+            Expanded(
+                child: Column(
+              children: <Widget>[
+                Text(
+                  'Ikeja Lagos',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
+                ),
+                Text(
+                  'Somewhere',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white70),
+                )
+              ],
+            ))
+          ],
+        ),
       ),
     );
   }
 }
-
-// class ChatTile extends StatelessWidget {
-//   var _darkTheme;
-//   final String uid;
-//   final String id;
-//   final String conversationID;
-//   final String imgUrl;
-//   final String name;
-//   final String lastMessage;
-//   final bool haveunreadmessages;
-//   final int unreadmessages;
-//   final String lastSeenTime;
-//   ChatTile(
-//       {@required this.unreadmessages,
-//       @required this.uid,
-//       @required this.id,
-//       @required this.conversationID,
-//       @required this.haveunreadmessages,
-//       @required this.lastSeenTime,
-//       @required this.lastMessage,
-//       @required this.imgUrl,
-//       @required this.name});
-//   @override
-//   Widget build(BuildContext context) {
-//     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-//     _darkTheme = (themeNotifier.getTheme() == darkTheme);
-//     return GestureDetector(
-//       onTap: () {
-//         Navigator.push(
-//             context,
-//             MaterialPageRoute(
-//                 builder: (context) => ChatScreen(
-//                       uid,
-//                       conversationID,
-//                       id,
-//                       imgUrl,
-//                       name,
-//                     )));
-//       },
-//       child: Container(
-//         margin: EdgeInsets.symmetric(vertical: 16),
-//         child: Row(
-//           children: <Widget>[
-//             ClipRRect(
-//               borderRadius: BorderRadius.circular(60),
-//               child: Image.network(
-//                 imgUrl,
-//                 height: 60,
-//                 width: 60,
-//                 fit: BoxFit.cover,
-//                 // color: _darkTheme ? Colors.white : Colors.black,
-//               ),
-//             ),
-//             SizedBox(
-//               width: 16,
-//             ),
-//             Expanded(
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: <Widget>[
-//                   Text(
-//                     name,
-//                     style: TextStyle(
-//                         color: _darkTheme ? Colors.white : Colors.black87,
-//                         fontSize: 17,
-//                         fontWeight: FontWeight.w600),
-//                   ),
-//                   SizedBox(
-//                     height: 8,
-//                   ),
-//                   Text(
-//                     lastMessage.length >= 30
-//                         ? lastMessage.substring(0, 25) + '...'
-//                         : lastMessage,
-//                     style: TextStyle(
-//                         color: _darkTheme ? Colors.white : Colors.black54,
-//                         fontSize: 15,
-//                         fontFamily: "Neue Haas Grotesk"),
-//                   )
-//                 ],
-//               ),
-//             ),
-//             SizedBox(
-//               width: 14,
-//             ),
-//             Container(
-//               child: Column(
-//                 mainAxisAlignment: MainAxisAlignment.start,
-//                 children: <Widget>[
-//                   Text(lastSeenTime),
-//                   SizedBox(
-//                     height: 16,
-//                   ),
-//                   haveunreadmessages
-//                       ? Container(
-//                           width: 30,
-//                           height: 30,
-//                           alignment: Alignment.center,
-//                           padding: EdgeInsets.all(8),
-//                           decoration: BoxDecoration(
-//                               color: Color(0xffff410f),
-//                               borderRadius: BorderRadius.circular(12)),
-//                           child: Text(
-//                             "$unreadmessages",
-//                             style: TextStyle(
-//                                 color: Colors.white,
-//                                 fontWeight: FontWeight.w600),
-//                           ))
-//                       : Container()
-//                 ],
-//               ),
-//             )
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
