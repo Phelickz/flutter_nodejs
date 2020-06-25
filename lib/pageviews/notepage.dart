@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:flutter_node_js/models/note.dart';
+import 'package:flutter_node_js/responsiveness/dimensions.dart';
 import 'package:flutter_node_js/screens/addNote.dart';
+import 'package:flutter_node_js/services/api.dart';
+import 'package:flutter_node_js/state/noteState.dart';
+import 'package:flutter_node_js/state/state.dart';
 import 'package:flutter_node_js/utils/colors.dart';
 import 'package:flutter_node_js/utils/strings.dart';
+import 'package:provider/provider.dart';
 
 class NotePage extends StatefulWidget {
   @override
@@ -9,9 +16,30 @@ class NotePage extends StatefulWidget {
 }
 
 class _NotePageState extends State<NotePage> {
+  NoteProvider noteProvider = NoteProvider();
+  SizeConfig sizeConfig = SizeConfig();
+  
+
   bool important = false;
+  int notes = 0;
+  int imp = 0;
+
+  @override
+  void initState() {
+    NoteState notestate = Provider.of<NoteState>(context, listen: false);
+    noteProvider.getAllNotes(notestate);
+    noteProvider.getImportantNotes(notestate);
+    SchedulerBinding.instance.addPostFrameCallback((_) { 
+      setState(() {
+        notes = notestate.noteList.length;
+        imp = notestate.importantNote.length;
+      });
+    });
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
+    final state = Provider.of<NoteState>(context);
     double height = MediaQuery.of(context).size.height;
     double width = MediaQuery.of(context).size.width;
     return Scaffold(
@@ -30,6 +58,7 @@ class _NotePageState extends State<NotePage> {
       body: Padding(
         padding: const EdgeInsets.only(left: 40, right: 30),
         child: SingleChildScrollView(
+          // primary: true,
           child: Container(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,7 +79,7 @@ class _NotePageState extends State<NotePage> {
                               important = !important;
                             });
                           },
-                          child: _cards(width, height, 'Notes', '143', true)),
+                          child: _cards(width, height, 'Notes', notes.toString(), true)),
                       SizedBox(
                         width: 10,
                       ),
@@ -61,7 +90,7 @@ class _NotePageState extends State<NotePage> {
                             });
                           },
                           child:
-                              _cards(width, height, 'Important', '5', false)),
+                              _cards(width, height, 'Important', imp.toString(), false)),
                     ],
                   ),
                 ),
@@ -72,6 +101,8 @@ class _NotePageState extends State<NotePage> {
                     width: width,
                     height: height,
                     child: SingleChildScrollView(
+                      primary: true,
+                      physics: BouncingScrollPhysics(),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: <Widget>[
@@ -86,14 +117,16 @@ class _NotePageState extends State<NotePage> {
                             width: width,
                             height: height,
                             child: ListView.builder(
-                                shrinkWrap: true,
-                                // physics: NeverScrollableScrollPhysics(),
-                                itemCount: 7,
+                                // shrinkWrap: false,
+                                physics: BouncingScrollPhysics(),
+                                itemCount: important ? state.importantNote.length : state.noteList.length,
                                 itemBuilder: (context, index) {
+                                  var _data = important ? state.importantNote[index] : state.noteList[index];
                                   return important
-                                      ? _cards(width, height, 'title', 'number',
-                                          false)
-                                      : _notes(height, width);
+                                      ? imp == 0  ? Center(child: Text('No important notes', style: TextStyle(
+                                            color: Colors.white
+                                          ))) : _importantNotes(height, width, _data)
+                                      : _notes(height, width, _data);
                                 }),
                           ),
                         ],
@@ -107,40 +140,100 @@ class _NotePageState extends State<NotePage> {
     );
   }
 
-  Widget _notes(double height, double width) {
+   Widget _importantNotes(double height, double width, Note data) {
     return Card(
       color: Color(0xff171719),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Container(
-        width: width * 0.36,
-        height: height * 0.24,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                'CVE 212 Notes',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    color: Colors.white70),
-              ),
-              SizedBox(height: 10),
-              Expanded(
-                  child: Text(
-                test,
-                maxLines: 4,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: Colors.white24),
-              )),
-              Text('8 Dec',
+      child: InkWell(
+        onTap: (){
+          Navigator.push(context, MaterialPageRoute(builder: (context) => AddNote(
+            note: NoteMode.Editing,
+            title: data.title,
+            content: data.content,
+            noteID: data.id,
+          )));
+        },
+              child: Container(
+          // width: sizeConfig.xMargin(context, 100),
+          height: sizeConfig.yMargin(context, 24),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  data.title,
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 20,
-                      color: Colors.white70))
-            ],
+                      color: Colors.white70),
+                ),
+                SizedBox(height: 10),
+                Expanded(
+                    child: Text(
+                  data.content,
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: Colors.white24),
+                )),
+                Text(data.createdAt.toString(),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.white70))
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _notes(double height, double width, Note data) {
+    return Card(
+      color: Color(0xff171719),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: InkWell(
+        onTap: (){
+          Navigator.push(context, MaterialPageRoute(builder: (context) => AddNote(
+            note: NoteMode.Editing,
+            title: data.title,
+            content: data.content,
+            noteID: data.id,
+          )));
+        },
+              child: Container(
+          // width: sizeConfig.xMargin(context, 100),
+          height: sizeConfig.yMargin(context, 24),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  data.title,
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      color: Colors.white70),
+                ),
+                SizedBox(height: 10),
+                Expanded(
+                    child: Text(
+                  data.content,
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: Colors.white24),
+                )),
+                Text(data.date,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.white70))
+              ],
+            ),
           ),
         ),
       ),

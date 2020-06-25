@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_node_js/models/reminders.dart';
 import 'package:flutter_node_js/responsiveness/dimensions.dart';
+import 'package:flutter_node_js/screens/bottombar.dart';
+import 'package:flutter_node_js/services/api.dart';
+import 'package:flutter_node_js/services/snackBarService.dart';
+import 'package:flutter_node_js/state/noteState.dart';
 import 'package:flutter_node_js/state/state.dart';
 import 'package:flutter_node_js/utils/colors.dart';
+import 'package:flutter_node_js/utils/strings.dart';
 import 'package:flutter_node_js/utils/validator.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AddReminders extends StatefulWidget {
   @override
@@ -12,24 +19,29 @@ class AddReminders extends StatefulWidget {
 }
 
 class _AddRemindersState extends State<AddReminders> {
+  AuthStatus status;
   SizeConfig config = SizeConfig();
 
   DateTime now = DateTime.now();
 
+  final _formKey = GlobalKey<FormState>();
+
+  NoteProvider noteProvider = NoteProvider();
+
+  TextEditingController _titleController = TextEditingController();
+
+  TimeOfDay timeOfDay;
 
   @override
   Widget build(BuildContext context) {
+    final state = Provider.of<NoteState>(context);
     String newDate = DateFormat.jm().format(now);
     String newD = DateFormat.MMMEd().format(now);
     final noteState = Provider.of<NoteState>(context);
     //A lifesaver that helps to format date and time
     MaterialLocalizations localizations = MaterialLocalizations.of(context);
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-          icon: Icon(Icons.save),
-          backgroundColor: GlobalColors.redColor,
-          onPressed: null,
-          label: Text('Save')),
+      floatingActionButton: _floatingAction(),
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
@@ -59,20 +71,24 @@ class _AddRemindersState extends State<AddReminders> {
             children: <Widget>[
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 0),
-                child: Container(
-                  width: config.xMargin(context, 0),
-                  color: Color(0xff171719),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: TextFormField(
-                      validator: UsernameValidator.validate,
-                      // controller: _titleController,
-                      style: TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                          labelText: 'Title',
-                          labelStyle: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600)),
+                child: Form(
+                  key: _formKey,
+                  child: Container(
+                    width: config.xMargin(context, 0),
+                    color: Color(0xff171719),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: TextFormField(
+                        controller: _titleController,
+                        validator: UsernameValidator.validate,
+                        // controller: _titleController,
+                        style: TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                            labelText: 'Title',
+                            labelStyle: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600)),
+                      ),
                     ),
                   ),
                 ),
@@ -102,7 +118,7 @@ class _AddRemindersState extends State<AddReminders> {
         ));
   }
 
-  _date(MaterialLocalizations localizations, NoteState noteState){
+  _date(MaterialLocalizations localizations, NoteState noteState) {
     return Row(
       children: <Widget>[
         Icon(
@@ -126,7 +142,8 @@ class _AddRemindersState extends State<AddReminders> {
     );
   }
 
-  Future<Null> selectStartDate(BuildContext context, NoteState noteState) async {
+  Future<Null> selectStartDate(
+      BuildContext context, NoteState noteState) async {
     final DateTime selectedDate = await showDatePicker(
         context: context,
         initialDate: DateTime.now(),
@@ -165,16 +182,16 @@ class _AddRemindersState extends State<AddReminders> {
     );
   }
 
-  Future<Null> selectFirstTime(BuildContext context, NoteState noteState) async {
+  Future<Null> selectFirstTime(
+      BuildContext context, NoteState noteState) async {
     TimeOfDay currentTime = TimeOfDay.now();
     final TimeOfDay selectedTime = await showTimePicker(
       context: context,
       initialTime: noteState.firstTime,
     );
-    
+
     if (noteState.isToday() && selectedTime.hour < currentTime.hour) {
-      showSnackBar(
-        context, text: "Cannot set reminder in the past");
+      showSnackBar(context, text: "Cannot set reminder in the past");
     } else {
       if (selectedTime != null && selectedTime != noteState.firstTime) {
         noteState.updateFirstTime(selectedTime);
@@ -196,6 +213,49 @@ class _AddRemindersState extends State<AddReminders> {
     );
 
     Scaffold.of(context).showSnackBar(snackBar);
+  }
+
+  Widget _floatingAction() {
+    return Builder(
+      builder: (BuildContext _context) {
+        final noteState = Provider.of<NoteState>(context);
+
+        SnackBarService.instance.buildContext = _context;
+        MaterialLocalizations localizations = MaterialLocalizations.of(context);
+        return status == AuthStatus.Authenticating
+            ? CircularProgressIndicator()
+            : FloatingActionButton.extended(
+                icon: Icon(Icons.save),
+                backgroundColor: GlobalColors.redColor,
+                onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  String userID = prefs.getString('userID');
+                  if (_formKey.currentState.validate()) {
+                    _formKey.currentState.save();
+                    noteProvider
+                        .addReminder(Reminder(
+                            title: _titleController.text,
+                            time: localizations
+                                .formatTimeOfDay(noteState.firstTime),
+                            date:
+                                DateFormat.MMMEd().format(noteState.startDate),
+                            userId: userID,
+                            completed: false))
+                        .then((value) {
+                      if (value == null) {
+                        Future.delayed(Duration(seconds: 1)).then((value) {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => MyHomePage()));
+                        });
+                      }
+                    });
+                  }
+                },
+                label: Text('Save'));
+      },
+    );
   }
 }
 

@@ -4,6 +4,8 @@ import 'package:flutter_node_js/models/user.dart';
 import 'package:flutter_node_js/screens/register.dart';
 import 'package:flutter_node_js/services/snackBarService.dart';
 import 'package:flutter_node_js/state/noteState.dart';
+import 'package:flutter_node_js/state/state.dart';
+import 'package:provider/provider.dart';
 
 import 'home.dart';
 
@@ -151,17 +153,23 @@ class _LoginState extends State<Login> {
   Widget _button() {
     return Builder(
       builder: (BuildContext _context) {
+        final state = Provider.of<NoteState>(context);
+
         SnackBarService.instance.buildContext = _context;
         return FloatingActionButton.extended(
             icon: Icon(Icons.exit_to_app),
             onPressed: () async {
-              noteProvider.login(User(
-                  email: _emailController.text,
-                  password: _passwordController.text)).then((apiKey) => {
-                    if(apiKey!=null){
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => Home()))
-                    }
-                  });
+              state
+                  .login(User(
+                      email: _emailController.text,
+                      password: _passwordController.text))
+                  .then((apiKey) => {
+                        if (apiKey != null)
+                          {
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: (context) => Home()))
+                          }
+                      });
             },
             backgroundColor: Colors.red[800],
             label: Text(

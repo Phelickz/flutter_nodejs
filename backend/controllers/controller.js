@@ -1,4 +1,4 @@
-const Note = require('C:/Users/user/AndroidStudioProjects/flutter_node_js/backend/models/note.js');
+const Note = require('../models/note.js');
 
 // Create and Save a new Note
 exports.create = (req, res) => {
@@ -44,7 +44,19 @@ exports.findAll = (req, res) => {
 
 
 exports.findImportant = (req, res) => {
-    var query = {important: true};
+    var query = {userID: req.body.userId, important: true};
+    Note.find(query)
+        .then(notes => {
+            res.send(notes);
+        }).catch(err => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving notes."
+            });
+        });
+};
+
+exports.findByUser = (req, res) => {
+    var query = {userID: req.body.userId};
     Note.find(query)
         .then(notes => {
             res.send(notes);

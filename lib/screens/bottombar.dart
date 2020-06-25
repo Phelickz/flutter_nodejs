@@ -45,9 +45,6 @@ class _MyHomePageState extends State<MyHomePage> {
           onPageChanged: _onPageChanged,
           children: <Widget>[
             Container(child: DashBoard('sss')),
-            Container(
-              child: Home(),
-            ),
             Container(child: Reminders()),
             Container(child: NotePage()),
             Container(
@@ -74,42 +71,32 @@ class _MyHomePageState extends State<MyHomePage> {
                           : GlobalColors.greyColor,
                     )),
                 _bottomNavigationBarItem(
-                    "Reminders",
+                    "Tasks",
                     1,
                     Icon(
-                      Icons.calendar_view_day,
+                      Icons.track_changes,
                       size: 25,
                       color: _page == 1
                           ? GlobalColors.redColor
                           : GlobalColors.greyColor,
                     )),
                 _bottomNavigationBarItem(
-                    "Tasks",
+                    "Notes",
                     2,
                     Icon(
-                      Icons.track_changes,
+                      Icons.note,
                       size: 25,
                       color: _page == 2
                           ? GlobalColors.redColor
                           : GlobalColors.greyColor,
                     )),
                 _bottomNavigationBarItem(
-                    "Notes",
-                    3,
-                    Icon(
-                      Icons.note,
-                      size: 25,
-                      color: _page == 3
-                          ? GlobalColors.redColor
-                          : GlobalColors.greyColor,
-                    )),
-                _bottomNavigationBarItem(
                     "Profile",
-                    4,
+                    3,
                     Icon(
                       Icons.account_circle,
                       size: 25,
-                      color: _page == 4
+                      color: _page == 3
                           ? GlobalColors.redColor
                           : GlobalColors.greyColor,
                     )),

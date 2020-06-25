@@ -3,6 +3,7 @@ const router = express.Router();
 
 const notes = require('./controllers/controller.js');
 const users = require('./controllers/userController')
+const reminders = require('./controllers/reminders.js')
 
 
 //defining a simple route
@@ -27,19 +28,39 @@ router.post('/notes', notes.create);
 // Retrieve all Notes
 router.get('/notes', notes.findAll);
 
-router.get('/important', notes.findImportant);
+router.post('/important', notes.findImportant);
 
 // Retrieve a single Note with noteId
 router.get('/notes/:noteId', notes.findOne);
 
 // Retrieve a single Note with userID
-router.get('/notes/:userId', notes.findOneByUser);
+router.post('/notes/user', notes.findByUser);
 
 // Update a Note with noteId
 router.put('/notes/:noteId', notes.update);
 
 // Delete a Note with noteId
 router.delete('/notes/:noteId', notes.delete);
+
+
+router.post('/reminders', reminders.create);
+
+// Retrieve all Notes
+router.post('/reminders/user', reminders.findAll);
+
+router.get('/completed', reminders.findImportant);
+
+// Retrieve a single Note with noteId
+router.get('/reminders/:reminderId', reminders.findOne);
+
+// Retrieve a single Note with userID
+router.get('/reminders/:userId', reminders.findOneByUser);
+
+// Update a Note with noteId
+router.put('/reminders/:reminderId', reminders.update);
+
+// Delete a Note with noteId
+router.delete('/reminders/:reminderId', reminders.delete);
 
 
 module.exports = router;

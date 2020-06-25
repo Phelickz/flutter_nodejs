@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_node_js/models/user.dart';
 import 'package:flutter_node_js/screens/home.dart';
 import 'package:flutter_node_js/screens/login.dart';
+import 'package:flutter_node_js/services/api.dart';
 import 'package:flutter_node_js/services/snackBarService.dart';
 import 'package:flutter_node_js/state/noteState.dart';
+import 'package:flutter_node_js/state/state.dart';
 import 'package:flutter_node_js/utils/validator.dart';
+import 'package:provider/provider.dart';
 
 class Register extends StatefulWidget {
   @override
@@ -13,6 +16,7 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
+  AuthStatus status;
   bool _obscureText = true;
   final _formKey = GlobalKey<FormState>();
   TextEditingController _emailController = TextEditingController();
@@ -186,29 +190,32 @@ class _RegisterState extends State<Register> {
 
   Widget _button() {
     return Builder(builder: (BuildContext _context) {
+      final state = Provider.of<NoteState>(context);
       SnackBarService.instance.buildContext = _context;
 
-      return FloatingActionButton.extended(
-          icon: Icon(Icons.exit_to_app),
-          onPressed: () {
-            noteProvider
-                .register(User(
-                    name: _usernameController.text,
-                    email: _emailController.text,
-                    password: _passwordController.text))
-                .then((apiKey) {
-              if (apiKey != null) {
-                Navigator.push(
-                    context, MaterialPageRoute(builder: (context) => Home()));
-              }
-              return null;
-            });
-          },
-          backgroundColor: Colors.red[800],
-          label: Text(
-            'Register',
-            style: TextStyle(color: Colors.black),
-          ));
+      return status == AuthStatus.Authenticating
+          ? CircularProgressIndicator()
+          : FloatingActionButton.extended(
+              icon: Icon(Icons.exit_to_app),
+              onPressed: () {
+                state
+                    .register(User(
+                        name: _usernameController.text,
+                        email: _emailController.text,
+                        password: _passwordController.text))
+                    .then((apiKey) {
+                  if (apiKey != null) {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => Home()));
+                  }
+                  return null;
+                });
+              },
+              backgroundColor: Colors.red[800],
+              label: Text(
+                'Register',
+                style: TextStyle(color: Colors.black),
+              ));
     });
   }
 }

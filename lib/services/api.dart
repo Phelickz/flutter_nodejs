@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_node_js/models/note.dart';
+import 'package:flutter_node_js/models/reminders.dart';
 import 'package:flutter_node_js/models/user.dart';
+import 'package:flutter_node_js/pageviews/reminders.dart';
 import 'package:flutter_node_js/services/snackBarService.dart';
 
 import 'package:flutter_node_js/state/state.dart';
@@ -62,6 +64,7 @@ class ApiService {
     String payload = json.encode(data);
     Response response =
         await http.post(loginUrl, headers: headers, body: payload);
+    status = AuthStatus.Authenticating;
     if (response.statusCode == 500) {
       status = AuthStatus.Error;
       SnackBarService.instance.showSnackBarError('Server Error. Try again');
@@ -106,6 +109,7 @@ class ApiService {
     String payload = json.encode(data);
     Response response =
         await http.post(registerUrl, headers: headers, body: payload);
+    status = AuthStatus.Authenticating;
     if (response.statusCode == 400) {
       status = AuthStatus.UserNotFound;
       SnackBarService.instance
@@ -138,7 +142,16 @@ class ApiService {
 
   Future<List<Note>> getAllNotes(NoteState noteState) async {
     try {
-      Response response = await http.get(backendUrl);
+      final preference = await SharedPreferences.getInstance();
+      String apiKey = preference.getString('userID');
+      Map<String, String> headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
+      Map data = {"userId": apiKey};
+      String payload = json.encode(data);
+      Response response =
+          await http.post(getUserNote, headers: headers, body: payload);
       if (response.statusCode != 200) {
         print('Some error occured');
         return null;
@@ -166,7 +179,16 @@ class ApiService {
   }
 
   Future<List<Note>> getImportantNotes(NoteState noteState) async {
-    Response response = await http.get(getImportant);
+    final preference = await SharedPreferences.getInstance();
+    String apiKey = preference.getString('userID');
+    Map<String, String> headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    Map data = {"userId": apiKey};
+    String payload = json.encode(data);
+    Response response =
+        await http.post(getImportant, headers: headers, body: payload);
     if (response.statusCode != 200) {
       print('Some error occured');
       return null;
@@ -210,11 +232,13 @@ class ApiService {
       "title": note.title,
       "content": note.content,
       "date": note.date,
-      "important": note.important
+      "important": note.important,
+      "userID": note.userId
     };
     String payload = json.encode(data);
     Response response =
         await http.post(addNoteUrl, headers: headers, body: payload);
+    status = AuthStatus.Authenticating;
     if (response.statusCode != 200) {
       status = AuthStatus.Error;
       SnackBarService.instance
@@ -225,5 +249,70 @@ class ApiService {
     status = AuthStatus.Authenticated;
     SnackBarService.instance.showSnackBarSuccess('Note saved successful');
     return null;
+  }
+
+  Future<Reminder> addReminder(Reminder reminder) async {
+    Map<String, String> headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    Map data = {
+      "title": reminder.title,
+      "date": reminder.date,
+      "time": reminder.time,
+      "completed": reminder.completed,
+      "userID": reminder.userId
+    };
+    String payload = json.encode(data);
+    Response response =
+        await http.post(addReminderUrl, headers: headers, body: payload);
+    status = AuthStatus.Authenticating;
+    if (response.statusCode != 200) {
+      status = AuthStatus.Error;
+      SnackBarService.instance
+          .showSnackBarError('An error occurred. Try again');
+      return null;
+    }
+
+    status = AuthStatus.Authenticated;
+    SnackBarService.instance.showSnackBarSuccess('Reminder saved successful');
+    return null;
+  }
+
+  Future<List<Reminder>> getAllReminders(NoteState noteState) async {
+    try {
+      final preference = await SharedPreferences.getInstance();
+      String apiKey = preference.getString('userID');
+      Map<String, String> headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
+      Map data = {"userId": apiKey};
+      String payload = json.encode(data);
+      Response response = await http.post(viewReminderUrl, headers: headers, body: payload);
+      if (response.statusCode != 200) {
+        print('Some error occured');
+        return null;
+      }
+
+      List<Reminder> _finalReminders = [];
+      List apiData = json.decode(response.body);
+
+      for (var i = 0; i < apiData.length; i++) {
+        _finalReminders.add(Reminder(
+            title: apiData[i]['title'],
+            id: apiData[i]['_id'],
+            date: apiData[i]['date'],
+            time: apiData[i]['time'],
+            completed: apiData[i]['completed'],
+            userId: apiData[i]['userID'],
+            createdAt: apiData[i]['createdAt']));
+      }
+
+      noteState.reminders = _finalReminders;
+      return _finalReminders;
+    } catch (e) {
+      print(e);
+    }
   }
 }

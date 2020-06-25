@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_node_js/models/note.dart';
 import 'package:flutter_node_js/state/noteState.dart';
+import 'package:flutter_node_js/state/state.dart';
+import 'package:provider/provider.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -9,8 +11,10 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   NoteProvider _noteProvider = NoteProvider();
+  
   @override
   Widget build(BuildContext context) {
+    final notestate = Provider.of<NoteState>(context);
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.note_add),
@@ -19,7 +23,7 @@ class _HomeState extends State<Home> {
         title: Text('Notes'),
       ),
       body: FutureBuilder<List<Note>>(
-          future: _noteProvider.getAllNotes(),
+          future: _noteProvider.getAllNotes(notestate),
           builder: (context, snapshot) {
             return snapshot.hasData
                 ? snapshot.data.isNotEmpty

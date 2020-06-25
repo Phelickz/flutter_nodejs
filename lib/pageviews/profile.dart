@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_node_js/state/noteState.dart';
 import 'package:flutter_node_js/utils/colors.dart';
 
 class Profile extends StatefulWidget {
@@ -7,6 +8,24 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
+  NoteProvider noteProvider = NoteProvider();
+  String username;
+  @override
+  void initState() {
+    getUserDetails();
+    super.initState();
+  }
+
+  void getUserDetails() async {
+    noteProvider.getUser().then((user) {
+      if (user != null) {
+        setState(() {
+          username = user.name;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -16,7 +35,7 @@ class _ProfileState extends State<Profile> {
           child: Column(
             children: <Widget>[
               Text(
-                'Phelickz',
+                username ?? '',
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 35,

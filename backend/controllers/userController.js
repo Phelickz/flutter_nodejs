@@ -1,7 +1,7 @@
 var bcrypt = require('bcrypt')
 var jwt = require('jsonwebtoken')
 const config = require('../DB/config');
-const User = require('C:/Users/user/AndroidStudioProjects/flutter_node_js/backend/models/user.js');
+const User = require('../models/user.js');
 
 
 
